@@ -66,7 +66,7 @@ netifaces==0.11.0
 notify-py==0.3.3
 ntlm-auth==1.5.0
 numpy==1.21.5
-oauthlib==3.2.0
+oauthlib==3.2.1
 olefile==0.46
 outcome==1.2.0
 packaging==21.3
