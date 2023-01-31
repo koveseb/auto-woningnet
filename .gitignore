@@ -5,6 +5,7 @@
 !.gitignore
 !LICENSE
 !README.md
+!requirements.txt
 !auto_woningnet.py
 
 # ...even if they are in subdirectories
