@@ -1,0 +1,7 @@
+outgoing_smtp = "mail.domain.com"
+username = "email@gmail.com"
+password = "your_password"
+send_email = "mail@domain.com"
+email_pass = "your_password"
+receive_email = "email@gmail.com"
+log_path = "/home/user/log/debug.log"
