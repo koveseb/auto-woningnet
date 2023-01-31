@@ -41,7 +41,7 @@ def noCookies():
         jsClick(close_notification)
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -54,7 +54,7 @@ def login():
         jsClick(login)
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -68,11 +68,8 @@ def reagerenGelukt(b):
             jsClick(reageren_button)
             time.sleep(5)
 
-            try:
-                tab = b.find_element(By.CSS_SELECTOR, ".tabMenuContainer dd:not(.active)")
-                jsClick(tab)
-            except:
-                return False
+            tab = b.find_element(By.CSS_SELECTOR, ".tabMenuContainer dd:not(.active)")
+            jsClick(tab)
 
             checkbox = b.find_element(By.CSS_SELECTOR, "#akkoordContainer label")
             jsClick(checkbox)
@@ -91,7 +88,7 @@ def reagerenGelukt(b):
 
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -121,7 +118,7 @@ def reageerOp(url, aantal_reacties):
                 time.sleep(3)
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -146,7 +143,7 @@ def lotingBeschikbaar():
     except Exception as e:
         logging.info("An error ocurred while checking if lotingBeschikbaar")
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -169,7 +166,7 @@ def aantalReacties(url):
     except Exception as e:
         logging.info("An error ocurred while checking the aantalReacties")
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -198,7 +195,7 @@ logging.basicConfig(filename=config.log_path, level=logging.INFO)
 
 opts = Options()
 service = FirefoxService("/usr/bin/geckodriver", log_path="/dev/null")
-# opts.add_argument('-headless')
+opts.add_argument('-headless')
 b = webdriver.Firefox(options=opts, service=service)
 
 b.get(WONINGNET)
@@ -221,5 +218,5 @@ else:
 #     #     logging.info("No loting woning reacties left")
 #     reageerOp(LOTING, MAX_REACTIES)
 
-# b.quit()
-# mailLog()
+b.quit()
+mailLog()
