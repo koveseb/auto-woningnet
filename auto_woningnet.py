@@ -24,9 +24,6 @@ REGULIER = (
 )
 MAX_REACTIES = 2
 
-## TODO Make it run on the t4v1 server
-## TODO Improve logging by making messages more specific
-
 
 def jsClick(el):
     b.execute_script("arguments[0].click();", el)
@@ -37,8 +34,8 @@ def noCookies():
         accept_cookies = b.find_element(By.CSS_SELECTOR, ".cc-cookie-accept")
         jsClick(accept_cookies)
         time.sleep(2)
-        close_notification = b.find_element(By.CSS_SELECTOR, ".growl-notification .close")
-        jsClick(close_notification)
+        # close_notification = b.find_element(By.CSS_SELECTOR, ".growl-notification .close")
+        # jsClick(close_notification)
     except Exception as e:
         logging.error(e)
         mailLog()
