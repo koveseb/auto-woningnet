@@ -1,8 +1,8 @@
 import config
 import re
 import os
-import time
 import smtplib
+import time
 import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,9 +16,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 WONINGNET = "https://www.woningnetregioamsterdam.nl/"
-LOGIN = WONINGNET + "Inloggen"
-LOTING = WONINGNET + "Zoeken#model[Loting]~predef[2]"
-AANBOD = (WONINGNET + "woningaanbod")
 OVERZICHT = (WONINGNET + "WoningOverzicht")
 REACTIES = (WONINGNET + "ReactieOverzicht")
 MAX_REACTIES = 2
@@ -30,15 +27,12 @@ def jsClick(el):
 
 def noCookies():
     try:
-        time.sleep(2)
+        WebDriverWait(b, 10).until(EC.element_to_be_clickable((By.ID, "cookiescript_accept")))
         accept_cookies = b.find_element(By.ID, "cookiescript_accept")
         jsClick(accept_cookies)
-        time.sleep(2)
-        # close_notification = b.find_element(By.CSS_SELECTOR, ".growl-notification .close")
-        # jsClick(close_notification)
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -48,10 +42,10 @@ def login():
         b.find_element(By.ID, "Input_PasswordVal").send_keys(config.password)
         login = b.find_element(By.CSS_SELECTOR, "#b8-Button button")
         jsClick(login)
-        time.sleep(5)
+        WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_after_login")))  # Update with appropriate selector
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -59,11 +53,10 @@ def reagerenGelukt(b):
     try:
         reageren_button = b.find_element(By.CSS_SELECTOR, ".inhetkort .btn.OSFillParent")
         reageren_button_innerText = reageren_button.get_attribute("innerText")
-        # reageren_button_text = re.sub("[^a-z^A-Z]+", "", reageren_button_innerText)
 
         if reageren_button_innerText == "Reageren op deze woning":
             jsClick(reageren_button)
-            time.sleep(5)
+            WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_after_reageren")))  # Update with appropriate selector
             return True
         elif reageren_button_innerText == "Reactie intrekken":
             logging.info("Already reacted to woning: " + b.current_url)
@@ -73,14 +66,14 @@ def reagerenGelukt(b):
 
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
 def reageerOp(url, aantal_reacties):
     try:
         b.get(url)
-        time.sleep(10)
+        WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".OSBlockWidget > a")))
         unit_links = b.find_elements(By.CSS_SELECTOR, ".OSBlockWidget > a")
 
         i = 0
@@ -89,7 +82,7 @@ def reageerOp(url, aantal_reacties):
                 link = unit.get_attribute("href")
                 b.execute_script("window.open('" + link + "', '_blank');")
                 b.switch_to.window(b.window_handles[1])
-                time.sleep(10)
+                WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_on_unit_page")))  # Update with appropriate selector
 
                 if reagerenGelukt(b):
                     i += 1
@@ -100,22 +93,22 @@ def reageerOp(url, aantal_reacties):
                     b.close()
 
                 b.switch_to.window(b.window_handles[0])
-                time.sleep(3)
+                WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_on_main_page")))  # Update with appropriate selector
     except Exception as e:
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
 def aantalReacties(url):
     try:
         b.get(url)
-        time.sleep(15)
+        WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#HaalActueleReacties_Count span")))
         return int(b.find_element(By.CSS_SELECTOR, "#HaalActueleReacties_Count span").text)
     except Exception as e:
-        logging.info("An error ocurred while checking the aantalReacties")
+        logging.info("An error occurred while checking the aantalReacties")
         logging.error(e)
-        # mailLog()
+        mailLog()
         b.quit()
 
 
@@ -144,21 +137,21 @@ logging.basicConfig(filename=config.log_path, level=logging.INFO)
 
 opts = Options()
 service = FirefoxService("/usr/local/bin/geckodriver", log_path="/dev/null")
-# opts.add_argument('-headless')
+opts.add_argument('-headless')
 b = webdriver.Firefox(options=opts, service=service)
 
 b.get(WONINGNET)
+time.sleep(3)
 noCookies()
 login()
 
 aantal_reguliere_reacties = MAX_REACTIES - aantalReacties(REACTIES)
 if aantal_reguliere_reacties > 0:
     logging.info("Aantal reguliere reacties available: " + str(aantal_reguliere_reacties))
-    b.get(AANBOD)
-    time.sleep(5)
+    WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_on_overzicht_page")))  # Update with appropriate selector
     reageerOp(OVERZICHT, aantal_reguliere_reacties)
 else:
     logging.info("No reguliere woning reacties left")
 
-# b.quit()
-# mailLog()
+b.quit()
+mailLog()
