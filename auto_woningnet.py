@@ -1,8 +1,8 @@
 import config
 import re
 import os
-import smtplib
 import time
+import smtplib
 import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,6 +16,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 WONINGNET = "https://www.woningnetregioamsterdam.nl/"
+LOGIN = WONINGNET + "Inloggen"
 OVERZICHT = (WONINGNET + "WoningOverzicht")
 REACTIES = (WONINGNET + "ReactieOverzicht")
 MAX_REACTIES = 2
@@ -27,9 +28,10 @@ def jsClick(el):
 
 def noCookies():
     try:
-        WebDriverWait(b, 10).until(EC.element_to_be_clickable((By.ID, "cookiescript_accept")))
+        time.sleep(2)
         accept_cookies = b.find_element(By.ID, "cookiescript_accept")
         jsClick(accept_cookies)
+        time.sleep(2)
     except Exception as e:
         logging.error(e)
         mailLog()
@@ -42,7 +44,7 @@ def login():
         b.find_element(By.ID, "Input_PasswordVal").send_keys(config.password)
         login = b.find_element(By.CSS_SELECTOR, "#b8-Button button")
         jsClick(login)
-        WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_after_login")))  # Update with appropriate selector
+        time.sleep(5)
     except Exception as e:
         logging.error(e)
         mailLog()
@@ -56,7 +58,7 @@ def reagerenGelukt(b):
 
         if reageren_button_innerText == "Reageren op deze woning":
             jsClick(reageren_button)
-            WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_after_reageren")))  # Update with appropriate selector
+            time.sleep(5)
             return True
         elif reageren_button_innerText == "Reactie intrekken":
             logging.info("Already reacted to woning: " + b.current_url)
@@ -73,7 +75,7 @@ def reagerenGelukt(b):
 def reageerOp(url, aantal_reacties):
     try:
         b.get(url)
-        WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".OSBlockWidget > a")))
+        time.sleep(10)
         unit_links = b.find_elements(By.CSS_SELECTOR, ".OSBlockWidget > a")
 
         i = 0
@@ -82,7 +84,7 @@ def reageerOp(url, aantal_reacties):
                 link = unit.get_attribute("href")
                 b.execute_script("window.open('" + link + "', '_blank');")
                 b.switch_to.window(b.window_handles[1])
-                WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_on_unit_page")))  # Update with appropriate selector
+                time.sleep(10)
 
                 if reagerenGelukt(b):
                     i += 1
@@ -93,7 +95,7 @@ def reageerOp(url, aantal_reacties):
                     b.close()
 
                 b.switch_to.window(b.window_handles[0])
-                WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_on_main_page")))  # Update with appropriate selector
+                time.sleep(3)
     except Exception as e:
         logging.error(e)
         mailLog()
@@ -103,10 +105,10 @@ def reageerOp(url, aantal_reacties):
 def aantalReacties(url):
     try:
         b.get(url)
-        WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, "#HaalActueleReacties_Count span")))
+        time.sleep(15)
         return int(b.find_element(By.CSS_SELECTOR, "#HaalActueleReacties_Count span").text)
     except Exception as e:
-        logging.info("An error occurred while checking the aantalReacties")
+        logging.info("An error ocurred while checking the aantalReacties")
         logging.error(e)
         mailLog()
         b.quit()
@@ -141,14 +143,13 @@ opts.add_argument('-headless')
 b = webdriver.Firefox(options=opts, service=service)
 
 b.get(WONINGNET)
-time.sleep(3)
 noCookies()
 login()
 
 aantal_reguliere_reacties = MAX_REACTIES - aantalReacties(REACTIES)
 if aantal_reguliere_reacties > 0:
     logging.info("Aantal reguliere reacties available: " + str(aantal_reguliere_reacties))
-    WebDriverWait(b, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, ".some_element_on_overzicht_page")))  # Update with appropriate selector
+    time.sleep(5)
     reageerOp(OVERZICHT, aantal_reguliere_reacties)
 else:
     logging.info("No reguliere woning reacties left")
